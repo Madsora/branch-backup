@@ -1,0 +1,36 @@
+on:
+  pull_request:
+    types: [opened, synchronize]  # When PR is created or updated
+    branches:
+      - main  # Target branch
+
+jobs:
+  backup-before-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Create backup branch
+        run: |
+          TIMESTAMP=$(date +'%Y-%m-%d-%H-%M')
+          TARGET_BRANCH=${{ github.event.pull_request.base.ref }}
+          BACKUP_BRANCH="backup/${TARGET_BRANCH}-${TIMESTAMP}"
+
+          git fetch origin $TARGET_BRANCH
+          git checkout -b $BACKUP_BRANCH origin/$TARGET_BRANCH
+
+          # Only push if it doesn't already exist
+          if ! git ls-remote --exit-code --heads origin $BACKUP_BRANCH; then
+            git push origin $BACKUP_BRANCH
+          else
+            echo "Backup branch already exists, skipping push."
+          fi
