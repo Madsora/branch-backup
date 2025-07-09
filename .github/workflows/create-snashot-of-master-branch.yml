@@ -2,7 +2,7 @@ on:
   pull_request:
     types: [opened, synchronize]  # When PR is created or updated
     branches:
-      - main  # Target branch
+      - master  # Target branch
 
 jobs:
   backup-before-merge:
